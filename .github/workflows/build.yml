@@ -1,0 +1,36 @@
+name: Build Tracker
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'build_tracker.py'
+      - 'walkthrough.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run build script
+        run: python build_tracker.py
+
+      - name: Commit index.html and clean up build files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm --cached build_tracker.py walkthrough.txt || true
+          rm -f build_tracker.py walkthrough.txt
+          git commit -m "Build tracker index.html [skip ci]" || echo "No changes to commit"
+          git push
